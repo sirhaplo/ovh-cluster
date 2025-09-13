@@ -11,10 +11,3 @@ spec:
 
   monitoring:
     enabled: true
-
-  bootstrap:
-    initdb:
-      database: appdb
-      owner: appuser
-      secret:
-        name: appuser-secret
