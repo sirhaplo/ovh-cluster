@@ -1,0 +1,47 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kube-prometheus-stack
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://prometheus-community.github.io/helm-charts
+    targetRevision: "58.3.0"
+    chart: kube-prometheus-stack
+    helm:
+      values: |
+        # grafana:
+        #   ingress:
+        #     enabled: true
+        #     ingressClassName: traefik
+        #     annotations:
+        #       kubernetes.io/ingress.class: traefik
+        #       cert-manager.io/cluster-issuer: letsencrypt-prod              
+        #     hosts:
+        #       - grafana.sirhaplo.ovh
+        #     tls:
+        #       - hosts:
+        #           - grafana.sirhaplo.ovh
+        #         secretName: grafana-tls
+        # prometheus:
+        #   ingress:
+        #     enabled: true
+        #     ingressClassName: traefik
+        #     annotations:
+        #       cert-manager.io/cluster-issuer: letsencrypt-prod
+        #     hosts:
+        #       - prometheus.sirhaplo.ovh
+        #     tls:
+        #       - hosts:
+        #           - prometheus.sirhaplo.ovh
+        #         secretName: prometheus-tls
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
