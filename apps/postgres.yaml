@@ -8,7 +8,7 @@ spec:
   source:
     repoURL: https://github.com/sirhaplo/ovh-cluster.git
     targetRevision: HEAD
-    path: postgres
+    path: postgresql
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd
