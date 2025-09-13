@@ -9,12 +9,12 @@ spec:
     repoURL: https://charts.longhorn.io
     targetRevision: 1.9.1
     chart: longhorn
-    helm:
+    helm: # values fix from : https://github.com/longhorn/longhorn/issues/4853#issuecomment-1776266960
       values: |
         persistence:
           defaultClass: true
         preUpgradeChecker:
-            jobEnabled: false
+            jobEnabled: false # 
   destination:
     server: https://kubernetes.default.svc
     namespace: longhorn-system
