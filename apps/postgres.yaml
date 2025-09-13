@@ -1,27 +1,20 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: cloudnative-pg
+  name: postgres
   namespace: argocd
 spec:
   project: default
   source:
-    repoURL: https://cloudnative-pg.github.io/charts
-    targetRevision: "0.26" # Use a specific chart version
-    chart: cloudnative-pg
-    helm:
-      values: |
-        # Add any specific CloudNativePG Helm values here
-        # For example:
-        # postgresql:
-        #   image: quay.io/cloudnative-pg/postgresql:15.5
+    repoURL: https://github.com/sirhaplo/ovh-cluster.git
+    targetRevision: HEAD
+    path: postgres
   destination:
     server: https://kubernetes.default.svc
-    namespace: cloudnative-pg
+    namespace: argocd
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
-      - ServerSideApply=true # https://github.com/cloudnative-pg/charts/issues/325
