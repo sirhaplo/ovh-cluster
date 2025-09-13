@@ -7,12 +7,14 @@ spec:
   project: default
   source:
     repoURL: https://charts.longhorn.io
-    targetRevision: 1.5.3
+    targetRevision: 1.9.1
     chart: longhorn
     helm:
       values: |
         persistence:
           defaultClass: true
+        preUpgradeChecker:
+            jobEnabled: false
   destination:
     server: https://kubernetes.default.svc
     namespace: longhorn-system
