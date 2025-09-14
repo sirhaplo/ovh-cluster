@@ -2,6 +2,7 @@ apiVersion: postgresql.cnpg.io/v1
 kind: ClusterUser
 metadata:
   name: example-user
+  namespace: database
 spec:
   cluster: postgres
   secretName: example-user-secret
