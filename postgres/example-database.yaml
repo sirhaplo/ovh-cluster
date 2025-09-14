@@ -1,0 +1,9 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: cluster-example-one
+spec:
+  name: one
+  owner: example-user
+  cluster:
+    name: postgres  
