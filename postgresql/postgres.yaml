@@ -25,3 +25,4 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true # https://github.com/cloudnative-pg/charts/issues/325
+      - Replace=true
