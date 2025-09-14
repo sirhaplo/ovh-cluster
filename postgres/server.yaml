@@ -11,3 +11,16 @@ spec:
 
   monitoring:
     enabled: true
+
+  managed:
+    roles:
+    - name: example
+      createdb: true
+      ensure: present
+      login: true
+      superuser: false
+      inRoles:
+        - pg_monitor
+        - pg_signal_backend
+      passwordSecret:
+        name: example-user-secret
