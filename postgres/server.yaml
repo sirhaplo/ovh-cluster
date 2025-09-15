@@ -12,6 +12,9 @@ spec:
   monitoring:
     enablePodMonitor: true
 
+  superuserSecret:
+    name: superuser-secret
+    
   managed:
     roles:
     - name: example

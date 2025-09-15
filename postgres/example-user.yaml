@@ -1,0 +1,13 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: ManagedRole
+metadata:
+  name: example
+  namespace: database
+spec:
+  cluster:
+    name: postgres
+  options:
+    - LOGIN
+    - CREATEDB
+  secret:
+    name: reportuser-secret
