@@ -11,10 +11,18 @@ spec:
 
   monitoring:
     enablePodMonitor: true
+  
+  backup:
+    barmanObjectStore:
+      destinationPath: gs://k8s-pg-backup
+      googleCredentials:
+        applicationCredentials:
+          name: backup-creds
+          key: gcsCredentials
+      wal:
+        compression: gzip
 
-  superuserSecret:
-    name: superuser-secret
-    
+  
   managed:
     roles:
     - name: example
