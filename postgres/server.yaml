@@ -10,7 +10,7 @@ spec:
     size: 20Gi
 
   monitoring:
-    enabled: true
+    enablePodMonitor: true
 
   managed:
     roles:
