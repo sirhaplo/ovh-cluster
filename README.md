@@ -2,7 +2,7 @@
 
 Goal of this project is to have a HA K8S cluster based on bare metal on OVH.
 
-**Steps and functionalities**
+### Steps and functionalities
 0. Clone the repo
 1. Buy virtual machines on OVH and setup 
 2. Nodes setup and K3S install
@@ -36,7 +36,7 @@ Buy also a domain that will be usefull to manage ingresses
 
 ## 2 - Nodes setup
 
-**Setup each node**  
+### Setup each node**  
 ```bash
 ## Update your machine
 sudo apt update && sudo apt upgrade -y
@@ -48,51 +48,36 @@ sudo echo node1 > /etc/hostname
 sudo reboot
 ```
 
-**Install K3S on master node**  
+### Install K3s on the first (server) node
 ```bash
-# On master node install the first node
-curl -sfL https://get.k3s.io
-
+curl -sfL https://get.k3s.io | sh -
 # Get the node token
-cat /var/lib/rancher/k3s/server/node-token
-
-# Get kube config
-cat /etc/rancher/k3s/k3s.yaml
+sudo cat /var/lib/rancher/k3s/server/node-token
+# Kubeconfig
+sudo cat /etc/rancher/k3s/k3s.yaml
 ```
 
-**Install K3S on master node**  
+### Join agent nodes (replace with server address and token)
 ```bash
-# On each node install K3S
-curl -sfL https://get.k3s.io | K3S_URL=https://change_with_master_node:6443 K3S_TOKEN=change_with_token sh -
+curl -sfL https://get.k3s.io | K3S_URL=https://<MASTER_IP>:6443 K3S_TOKEN=<NODE_TOKEN> sh -
 ```
 
-**Kube config**  
-On your machine paste the kube config on `~/.kube/config`
-Find your cluster and in server value change the url with the ip of your master node.
+Copy the kubeconfig to your workstation (`~/.kube/config`) and update the server address to the master node IP. Verify nodes with `kubectl get nodes`.
 
-**Check on your machine**  
-`kubectl get nodes` and you should see 3 nodes
 
 ## 3 - Argocd install
-**Install ArgoCD with its manifest**  
+####Install ArgoCD with its manifest**  
 ```bash
 kubectl create namespace argocd
 kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 ```
 
-**Install App of apps**  
-Install ArgoCD application that will sync your cluster with your repository
-```bash
-kubectl apply -f bootstrap/app-of-apps.yaml
-```
-
-This will install the Infrastructure and Postgress Apps
 
 ## 4 Services setup
 
-The setup consists in various service that will be preinstalled :
+### Prometheus & Grafana — monitoring
+Use `kube-prometheus-stack` to get cluster and application monitoring. Grafana provides dashboards and Prometheus stores metrics.
 
-### Prometheus and Grafana
 Install  
 ```bash
 helm install kube-prometheus prometheus-community/kube-prometheus-stack -n monitoring --create-namespace
@@ -105,13 +90,21 @@ kubectl --namespace monitoring port-forward $POD_NAME 3000
 # Go to http://localhost:3000 - user admin pass prom-operator
 ```
 
-### Postgres operator
+### Postgres operator — CloudNativePG
+The operator manages PostgreSQL clusters and coordinates backups and restores. The repository includes example Postgres resources that create a small cluster and a sample database.
+
+Install operator (example):
 ```bash
 kubectl apply --server-side -f https://raw.githubusercontent.com/cloudnative-pg/cloudnative-pg/release-1.27/releases/cnpg-1.27.0.yaml
 ```
 It will be used in the next steps
 
 ### App of Apps
+App-of-Apps pattern
+- The `bootstrap/app-of-apps.yaml` is an Argo CD Application that watches the `apps/` folder and creates child Applications. This makes repository management modular.
+
+Note: Some components (large CRDs for Grafana/Postgres) are often easier to install manually once, rather than via Argo CD, to avoid sync-size/time issues.
+
 Argocd will install an Application that will monitor `apps` folder in repository.  
 In this folder there will be other Application definition that will install manifests from other folders.
 
@@ -142,41 +135,34 @@ It create a 2 instance cluster on database namespace.
 The will be a `example` database for `example-user` with `SuperPassword!` as password.  
 There is a preconfigured backup at midmight on google cloud platform storage bucket.
 
+### Backup on google cloud platform
+
 You must manually give access to your bucket creating a secret with service account json key :
 ```bash
 kubectl create secret generic backup-creds -n database --from-file=gcsCredentials=service_account.json -o yaml --dry-run=client > gcs_crendentials.yaml
 kubectl apply -f gcs_crendentials.yaml
 ```
 
-#### Access instance
+### Access instance
 
-Proxy service port and access to localhost:5432
+Proxy service port and access to localhost:5432 to access locally
 ```bash
 kubectl -n database port-forward svc/postgres-rw 5432:5432
 ```
 
-#### Backup and restore
-In `utils/scripts` there are 2 files to create a manual backup and restore
+### Manual backup and restore
+- `utils/postgres/backup-request.yaml` triggers an immediate backup snapshot.
+- `utils/postgres/cluster-recovery.yaml` demonstrates a restore flow that recreates a cluster from a backup.
 
-**Backup**
-It will create a snaphot immediatly
-```bash
-kubectl apply -f backup-request.yaml
-```
+## 7 — Next steps
 
-**Restore**
-It will create a new cluster with the data from the backup. You can use the new cluster as primary cluster or copy the data you need
-```bash
-kubectl apply -f cluster-recovery.yaml
-```
+MetalLB (recommended)
+- MetalLB provides a simple external IP allocation / load balancer for bare VMs and improves reachability for services that need external IPs.
 
-## 7 - Next steps
-Next steps to do should be :
+Secrets management
+- Do not keep plaintext secrets in the repository. Use sealed-secrets, ExternalSecrets, HashiCorp Vault, or a cloud KMS-backed solution.
 
-### MetalLB
-It will orchestrate an internal load balancer using all external IP.  
-So there will be a better reachability
-
-### Sealed secrets / External secrets
-The secrets saved on this repository are insecure.  
-Sealed secret operator or external vaults will be a better solution
+Security & production considerations (brief)
+- Harden the VMs (disable unused services, enable a firewall, keep packages up to date).
+- Limit who can access the Argo CD UI and API (use an ingress with authentication, or expose only through a bastion).
+- Use network policies and resource limits for workloads.
