@@ -1,0 +1,25 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: cluster-restore
+  namespace: database
+spec:
+  instances: 1
+
+  storage:
+    size: 1Gi    
+
+  bootstrap:
+    recovery:
+      source: postgres
+
+  externalClusters:
+    - name: postgres
+      barmanObjectStore:
+        destinationPath: gs://k8s-pg-backup
+        googleCredentials:
+          applicationCredentials:
+            name: backup-creds
+            key: gcsCredentials
+        wal:
+          maxParallel: 8
